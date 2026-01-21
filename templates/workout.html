@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Workout {{ workout_id }} - {{ workout.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="workout-header">
+        <a href="{{ url_for('home') }}" class="back-btn">&larr;</a>
+        <div>
+            <h1>Workout {{ workout_id }}</h1>
+            <p class="subtitle">{{ workout.name }} &bull; {{ workout.duration }}</p>
+        </div>
+    </div>
+
+    <div class="exercises">
+        {% for exercise in workout.exercises %}
+        <div class="exercise-card" data-index="{{ loop.index0 }}">
+            <div class="exercise-header">
+                <span class="exercise-number">{{ loop.index }}</span>
+                <div class="exercise-info">
+                    <h3>{{ exercise.name }}</h3>
+                    <p class="exercise-details">
+                        {{ exercise.sets }} sets &times; {{ exercise.reps }}
+                        {% if exercise.rpe %}<span class="rpe">RPE {{ exercise.rpe }}</span>{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="sets-container">
+                {% for set_num in range(1, exercise.sets + 1) %}
+                {% set exercise_key = "exercise_" ~ loop.index0|string %}
+                {% set set_key = "set_" ~ set_num|string %}
+                {% set set_data = progress.get(exercise_key, {}).get(set_key, {}) %}
+                <div class="set-row" data-set="{{ set_num }}">
+                    <span class="set-label">Set {{ set_num }}</span>
+                    <input type="number"
+                           class="input-weight"
+                           placeholder="lbs"
+                           value="{{ set_data.get('weight', '') }}"
+                           inputmode="decimal">
+                    <input type="number"
+                           class="input-reps"
+                           placeholder="reps"
+                           value="{{ set_data.get('reps', '') }}"
+                           inputmode="numeric">
+                    <button class="set-complete {% if set_data.get('completed') %}completed{% endif %}"
+                            onclick="toggleSet(this, {{ loop.index0 }}, {{ set_num }})">
+                        &#10003;
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const workoutId = "{{ workout_id }}";
+
+function toggleSet(btn, exerciseIndex, setNumber) {
+    const row = btn.closest('.set-row');
+    const weight = row.querySelector('.input-weight').value;
+    const reps = row.querySelector('.input-reps').value;
+    const completed = !btn.classList.contains('completed');
+
+    btn.classList.toggle('completed');
+
+    fetch('/api/progress', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            workout_id: workoutId,
+            exercise_index: exerciseIndex,
+            set_number: setNumber,
+            completed: completed,
+            weight: weight,
+            reps: reps
+        })
+    });
+}
+
+// Auto-save on input change
+document.querySelectorAll('.input-weight, .input-reps').forEach(input => {
+    input.addEventListener('change', function() {
+        const row = this.closest('.set-row');
+        const card = this.closest('.exercise-card');
+        const exerciseIndex = parseInt(card.dataset.index);
+        const setNumber = parseInt(row.dataset.set);
+        const weight = row.querySelector('.input-weight').value;
+        const reps = row.querySelector('.input-reps').value;
+        const completed = row.querySelector('.set-complete').classList.contains('completed');
+
+        fetch('/api/progress', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                workout_id: workoutId,
+                exercise_index: exerciseIndex,
+                set_number: setNumber,
+                completed: completed,
+                weight: weight,
+                reps: reps
+            })
+        });
+    });
+});
+</script>
+{% endblock %}

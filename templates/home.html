@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Workouts - Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Choose Your Workout</h1>
+
+    <div class="workout-cards">
+        {% for id, workout in workouts.items() %}
+        <a href="{{ url_for('workout_detail', workout_id=id) }}" class="workout-card workout-{{ id|lower }}">
+            <div class="workout-letter">{{ id }}</div>
+            <div class="workout-info">
+                <h2>{{ workout.name }}</h2>
+                <p class="workout-duration">{{ workout.duration }}</p>
+                <p class="workout-exercises">{{ workout.exercises|length }} exercises</p>
+            </div>
+            <div class="workout-arrow">&#8250;</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
