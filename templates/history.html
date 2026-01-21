@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}History - Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Workout History</h1>
+
+    {% if history %}
+    <div class="history-list">
+        {% for entry in history %}
+        <div class="history-card">
+            <div class="history-date">{{ entry.date }}</div>
+            <div class="history-info">
+                <span class="history-workout">Workout {{ entry.workout_id }}: {{ entry.workout_name }}</span>
+                <span class="history-progress">{{ entry.completed_sets }}/{{ entry.total_sets }} sets</span>
+            </div>
+            <div class="history-bar">
+                <div class="history-fill" style="width: {{ (entry.completed_sets / entry.total_sets * 100)|int }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No workout history yet.</p>
+        <a href="{{ url_for('home') }}" class="btn">Start a Workout</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
